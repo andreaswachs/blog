@@ -108,7 +108,7 @@ jobs:
           helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           helm package chart/
           CHART_VERSION=$(grep '^version:' chart/Chart.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
-          helm push "blog-${CHART_VERSION}.tgz" oci://ghcr.io/andreaswachs/charts/blog
+          helm push "blog-${CHART_VERSION}.tgz" oci://ghcr.io/andreaswachs/charts
 
   summary:
     name: Summary
