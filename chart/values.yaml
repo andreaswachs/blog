@@ -1,0 +1,10 @@
+image:
+  repository: ghcr.io/andreaswachs/blog
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+domain: blog.example.com
+
+gateway:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
