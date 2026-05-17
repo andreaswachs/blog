@@ -103,11 +103,14 @@ jobs:
         with:
           version: v3.17.1
 
+      - name: Install yq
+        uses: mikefarah/yq@v4
+
       - name: Package and push Helm chart
         run: |
           helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          helm package chart/
-          CHART_VERSION=$(grep '^version:' chart/Chart.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
+          CHART_VERSION=$(yq '.version' chart/Chart.yaml)
+          helm package chart/ --version "${CHART_VERSION}"
           helm push "blog-${CHART_VERSION}.tgz" oci://ghcr.io/andreaswachs/charts
 
   summary:
