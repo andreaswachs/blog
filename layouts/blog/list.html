@@ -1,0 +1,57 @@
+{{ define "main" }}
+<content>
+<input type="text" id="search" placeholder="Search posts..." oninput="filterPosts()" style="box-sizing:border-box;width:100%;margin-bottom:1.5em;padding:0.5em 0.7em;border:1px solid rgba(125,125,125,0.2);border-radius:6px;background:transparent;color:inherit;font-family:var(--font-secondary);font-size:0.875em;outline:none">
+
+{{ range .Pages.GroupByDate "2006" }}
+{{ $year := .Key }}
+<div class="group-year">
+<h2 style="margin-bottom:0.4em">{{ $year }}</h2>
+{{ range .Pages.GroupByDate "January" }}
+<div class="group-month">
+<h3 style="margin:0.8em 0 0.3em;font-size:0.9em;text-transform:uppercase;letter-spacing:0.05em;opacity:0.5">{{ .Key }}</h3>
+<ul class="blog-posts">
+{{ range .Pages }}
+  <li>
+    <span>
+      <i>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">
+          {{ .Date.Format (default "02 Jan, 2006" .Site.Params.dateFormat) }}
+        </time>
+      </i>
+    </span>
+    <a href="{{ .Permalink }}">{{ .Title }}</a>
+  </li>
+{{ end }}
+</ul>
+</div>
+{{ end }}
+</div>
+{{ end }}
+
+{{ if not .Pages }}
+<p>No posts yet.</p>
+{{ end }}
+</content>
+
+<script>
+function filterPosts() {
+  const q = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.group-month').forEach(m => {
+    let has = false;
+    m.querySelectorAll('li').forEach(li => {
+      const match = li.textContent.toLowerCase().includes(q);
+      li.style.display = match ? '' : 'none';
+      if (match) has = true;
+    });
+    m.style.display = has ? '' : 'none';
+  });
+  document.querySelectorAll('.group-year').forEach(y => {
+    let has = false;
+    y.querySelectorAll('.group-month').forEach(m => {
+      if (m.style.display !== 'none') has = true;
+    });
+    y.style.display = has ? '' : 'none';
+  });
+}
+</script>
+{{ end }}

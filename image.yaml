@@ -1,5 +1,5 @@
 ---
 name: blog
-version: 0.1.0
+version: 0.1.1
 registry: oci://ghcr.io/andreaswachs/blog
 platforms: linux/arm64,linux/amd64

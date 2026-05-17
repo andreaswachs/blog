@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: {{ .Chart.Name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Chart.Name }}
@@ -17,18 +17,36 @@ spec:
         app.kubernetes.io/name: {{ .Chart.Name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      securityContext:
+        {{- toYaml .Values.securityContext.pod | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 8080
               name: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 2
           livenessProbe:
             httpGet:
               path: /
               port: http
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
               port: http
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            failureThreshold: 3
+          securityContext:
+            {{- toYaml .Values.securityContext.container | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

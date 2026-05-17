@@ -1,6 +1,6 @@
 baseURL = "https://blog.example.com"
 languageCode = "en-us"
-title = "Blog"
+title = "wachs.software"
 enableRobotsTXT = true
 
 [module]
