@@ -565,10 +565,10 @@ jobs:
 
       - name: Package and push Helm chart
         run: |
+          helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
           helm package chart/
-          CHART_VERSION=$(grep '^version:' image.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
-          CHART_PACKAGE="blog-${CHART_VERSION}.tgz"
-          helm push "$CHART_PACKAGE" oci://ghcr.io/andreaswachs/charts/blog
+          CHART_VERSION=$(grep '^version:' chart/Chart.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
+          helm push "blog-${CHART_VERSION}.tgz" oci://ghcr.io/andreaswachs/charts/blog
 
   summary:
     name: Summary
