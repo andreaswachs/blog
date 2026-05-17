@@ -495,7 +495,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Read image metadata
         id: meta
@@ -565,7 +565,7 @@ jobs:
 
       - name: Package and push Helm chart
         run: |
-          helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+          helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
           helm package chart/
           CHART_VERSION=$(grep '^version:' chart/Chart.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
           helm push "blog-${CHART_VERSION}.tgz" oci://ghcr.io/andreaswachs/charts/blog
