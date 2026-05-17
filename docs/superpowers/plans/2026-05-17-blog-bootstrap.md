@@ -187,22 +187,45 @@ git commit -m "feat: add Hugo content structure with sample post"
 
 **Files:**
 - Create: `Dockerfile`
-- Create: `nginx.conf`
+- Create: `Caddyfile`
 
-- [ ] **Step 1: Create nginx.conf**
+- [ ] **Step 1: Create Caddyfile**
 
-```nginx
-server {
-    listen 8080;
-    server_name _;
-
-    root /usr/share/nginx/html;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
+```
+:8080 {
+    root * /usr/share/caddy
+    file_server
 }
+```
+
+- [ ] **Step 2: Create Dockerfile**
+
+```dockerfile
+FROM hugomods/hugo:exts AS builder
+
+WORKDIR /src
+COPY . .
+RUN hugo --minify
+
+FROM caddy:alpine
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=builder /src/public /usr/share/caddy
+EXPOSE 8080
+```
+
+- [ ] **Step 3: Verify Docker build**
+
+```bash
+docker build -t blog:local .
+```
+
+Expected: Build succeeds, no errors.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add Dockerfile Caddyfile
+git commit -m "feat: add multi-stage Dockerfile"
 ```
 
 - [ ] **Step 2: Create Dockerfile**

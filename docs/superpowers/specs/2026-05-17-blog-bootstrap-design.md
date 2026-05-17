@@ -107,7 +107,7 @@ gateway:
 
 Multi-stage:
 1. `hugo:extended` — builds site to `/public`
-2. `nginx:alpine` — copies `/public`, minimal nginx config, serves on 8080
+2. `caddy:alpine` — copies `/public`, minimal Caddyfile, serves on 8080
 
 ## Local Dev
 
