@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo todo
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [validate]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Read image metadata
+        id: meta
+        run: |
+          YAML="image.yaml"
+          containerfile="Dockerfile"
+
+          echo "name=$(grep '^name:' "$YAML" | sed 's/name:[[:space:]]*//' | tr -d '"' | tr -d "'")" >> "$GITHUB_OUTPUT"
+          echo "version=$(grep '^version:' "$YAML" | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")" >> "$GITHUB_OUTPUT"
+
+          registry_raw=$(grep '^registry:' "$YAML" | sed 's/registry:[[:space:]]*//' | tr -d '"' | tr -d "'")
+          registry_host=$(echo "$registry_raw" | sed 's|oci://||' | sed 's|/[^/]*$||')
+          echo "registry=$registry_raw" >> "$GITHUB_OUTPUT"
+          echo "registry_host=$registry_host" >> "$GITHUB_OUTPUT"
+
+          echo "containerfile=$containerfile" >> "$GITHUB_OUTPUT"
+
+          platforms=$(grep '^platforms:' "$YAML" | sed 's/platforms:[[:space:]]*//' | tr -d '"' | tr -d "'")
+          echo "platforms=${platforms:-linux/amd64}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ steps.meta.outputs.containerfile }}
+          platforms: ${{ steps.meta.outputs.platforms }}
+          push: true
+          load: false
+          provenance: false
+          tags: |
+            ${{ steps.meta.outputs.registry_host }}/${{ steps.meta.outputs.name }}:${{ steps.meta.outputs.version }}
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.meta.outputs.registry_host }}/${{ steps.meta.outputs.name }}:${{ steps.meta.outputs.version }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: 'trivy-results.txt'
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results-blog
+          path: trivy-results.txt
+
+      - name: Display Trivy results
+        run: |
+          echo "## Trivy Scan Results for blog" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.1
+
+      - name: Package and push Helm chart
+        run: |
+          helm package chart/
+          CHART_VERSION=$(grep '^version:' image.yaml | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
+          CHART_PACKAGE="blog-${CHART_VERSION}.tgz"
+          helm push "$CHART_PACKAGE" oci://ghcr.io/andreaswachs/charts/blog
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate summary
+        run: |
+          YAML="image.yaml"
+          echo "## Hugo Blog Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Released Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | Version | Registry |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "$YAML" ]; then
+            name=$(grep '^name:' "$YAML" | sed 's/name:[[:space:]]*//' | tr -d '"' | tr -d "'")
+            version=$(grep '^version:' "$YAML" | sed 's/version:[[:space:]]*//' | tr -d '"' | tr -d "'")
+            registry=$(grep '^registry:' "$YAML" | sed 's/registry:[[:space:]]*//' | tr -d '"' | tr -d "'")
+            echo "| Container Image | $version | \`$registry\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| Helm Chart | $version | \`oci://ghcr.io/andreaswachs/charts/blog\` |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Validation Status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build job**: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Trivy Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "Scan results are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo ":memo: **Note**: Trivy scans only check for CRITICAL and HIGH severity vulnerabilities." >> $GITHUB_STEP_SUMMARY
