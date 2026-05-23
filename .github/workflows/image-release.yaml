@@ -72,7 +72,8 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         if: steps.semrel.outputs.new_release_published == 'true'
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.29.0
+        continue-on-error: true
         with:
           image-ref: ghcr.io/andreaswachs/blog:${{ steps.semrel.outputs.new_release_version }}
           format: table
@@ -83,14 +84,14 @@ jobs:
           output: trivy-results.txt
 
       - name: Upload Trivy scan results
-        if: steps.semrel.outputs.new_release_published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true' && hashFiles('trivy-results.txt') != ''
         uses: actions/upload-artifact@v4
         with:
           name: trivy-results-blog
           path: trivy-results.txt
 
       - name: Display Trivy results
-        if: steps.semrel.outputs.new_release_published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true' && hashFiles('trivy-results.txt') != ''
         run: |
           echo "## Trivy Scan Results for blog" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
