@@ -100,9 +100,11 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.semrel.outputs.new_release_published == 'true'
-        run: |
-          gh release create "v${{ steps.semrel.outputs.new_release_version }}" \
-            --title "v${{ steps.semrel.outputs.new_release_version }}" \
-            --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: ${{ steps.semrel.outputs.new_release_notes }}
+        run: |
+          echo "$RELEASE_NOTES" > /tmp/release-notes.md
+          gh release create "v${{ steps.semrel.outputs.new_release_version }}" \
+            --title "v${{ steps.semrel.outputs.new_release_version }}" \
+            --notes-file /tmp/release-notes.md
