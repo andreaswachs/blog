@@ -1,46 +1,65 @@
 name: Chart Release
 
 on:
-  release:
+  workflow_run:
+    workflows: ["Image Release"]
     types:
-      - published
+      - completed
 
 jobs:
   release:
     name: Package and push chart
-    if: ${{ !github.event.release.prerelease }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get release version
-        id: version
+      - name: Download release version artifact
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Check if release was created
+        id: check
         run: |
-          TAG="${{ github.event.release.tag_name }}"
-          VERSION="${TAG#v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [ "${{ steps.download.outcome }}" = "success" ] && [ -f release-version.txt ]; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "version=$(cat release-version.txt)" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "No release version artifact found — skipping chart release"
+          fi
 
       - name: Set up Helm
+        if: steps.check.outputs.released == 'true'
         uses: azure/setup-helm@v4
         with:
           version: v3.17.1
 
       - name: Install yq
+        if: steps.check.outputs.released == 'true'
         uses: mikefarah/yq@v4
 
       - name: Update Chart.yaml with release version
+        if: steps.check.outputs.released == 'true'
         run: |
-          yq -i ".version = \"${{ steps.version.outputs.version }}\"" chart/Chart.yaml
-          yq -i ".appVersion = \"${{ steps.version.outputs.version }}\"" chart/Chart.yaml
+          yq -i ".version = \"${{ steps.check.outputs.version }}\"" chart/Chart.yaml
+          yq -i ".appVersion = \"${{ steps.check.outputs.version }}\"" chart/Chart.yaml
 
       - name: Lint chart
+        if: steps.check.outputs.released == 'true'
         run: helm lint chart/
 
       - name: Package and push Helm chart
+        if: steps.check.outputs.released == 'true'
         run: |
           helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          helm package chart/ --version "${{ steps.version.outputs.version }}"
-          helm push "blog-${{ steps.version.outputs.version }}.tgz" oci://ghcr.io/andreaswachs/charts
+          helm package chart/ --version "${{ steps.check.outputs.version }}"
+          helm push "blog-${{ steps.check.outputs.version }}.tgz" oci://ghcr.io/andreaswachs/charts
