@@ -8,6 +8,7 @@ on:
 jobs:
   release:
     name: Package and push chart
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -34,6 +35,9 @@ jobs:
         run: |
           yq -i ".version = \"${{ steps.version.outputs.version }}\"" chart/Chart.yaml
           yq -i ".appVersion = \"${{ steps.version.outputs.version }}\"" chart/Chart.yaml
+
+      - name: Lint chart
+        run: helm lint chart/
 
       - name: Package and push Helm chart
         run: |
