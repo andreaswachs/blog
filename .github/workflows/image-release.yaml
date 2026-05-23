@@ -72,7 +72,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         if: steps.semrel.outputs.new_release_published == 'true'
-        uses: aquasecurity/trivy-action@v0.29.0
+        uses: aquasecurity/trivy-action@v0.36.0
         continue-on-error: true
         with:
           image-ref: ghcr.io/andreaswachs/blog:${{ steps.semrel.outputs.new_release_version }}
