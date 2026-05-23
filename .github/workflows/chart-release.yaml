@@ -5,6 +5,12 @@ on:
     workflows: ["Image Release"]
     types:
       - completed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (without v prefix)'
+        required: true
+        type: string
 
 jobs:
   release:
@@ -29,7 +35,10 @@ jobs:
       - name: Check if release was created
         id: check
         run: |
-          if [ "${{ steps.download.outcome }}" = "success" ] && [ -f release-version.txt ]; then
+          if [ -n "${{ inputs.version || '' }}" ]; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.download.outcome }}" = "success" ] && [ -f release-version.txt ]; then
             echo "released=true" >> "$GITHUB_OUTPUT"
             echo "version=$(cat release-version.txt)" >> "$GITHUB_OUTPUT"
           else
