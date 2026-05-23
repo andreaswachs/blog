@@ -114,6 +114,7 @@ helm repo update
 ```sh
 helm upgrade --install 1password 1password/connect \
   --namespace 1password \
+  --version 2.4.1 \
   --set connect.credentialsName=1password-credentials \
   --set acceptanceTests.enabled=false \
   --set acceptanceTests.healthCheck.enabled=false
@@ -164,6 +165,7 @@ helm repo update
 ```sh
 helm upgrade --install external-secrets external-secrets/external-secrets \
   --namespace external-secrets \
+  --version 0.20.4 \
   --set installCRDs=true
 ```
 
