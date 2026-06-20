@@ -1,4 +1,17 @@
 {{ define "main" }}
+{{ if eq .Type "reports" }}
+{{ if .Title }}
+<h1>{{ .Title }}</h1>
+{{ end }}
+{{ if .Date }}
+<p style="font-size:0.85em;opacity:0.6;margin-bottom:1.5em">
+  <time datetime="{{ .Date.Format "2006-01-02" }}">
+    {{ .Date.Format (default "02 Jan, 2006" .Site.Params.dateFormat) }}
+  </time>
+</p>
+{{ end }}
+{{ end }}
+
 <content>
 <p style="font-size:0.85em;opacity:0.6;margin-bottom:1.5em;border-left:3px solid rgba(125,125,125,0.3);padding-left:0.75em">
   🤖 This report was entirely produced by an AI agent on behalf of the author.
