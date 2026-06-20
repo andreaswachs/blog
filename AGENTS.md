@@ -1,0 +1,152 @@
+# AGENTS.md
+
+Guidance for AI agents working with the `andreaswachs/blog` repository.
+
+## What this repo is
+
+A static site built with [Hugo](https://gohugo.io/) using the [`hugo-bearblog`](https://github.com/janraasch/hugo-bearblog) theme. It is deployed to `https://wachs.software` via a Helm chart on a Kubernetes cluster. Content is authored in Markdown with YAML frontmatter.
+
+## Content types
+
+This site has two distinct content sections. They share the same underlying mechanics (Markdown + Hugo) but have different purposes, templates, and attribution requirements.
+
+### 1. Blog posts (`content/blog/`)
+
+Traditional long-form posts written by the author.
+
+- **Index:** `content/blog/_index.md`
+- **Listing template:** `layouts/blog/list.html`
+- **Single template:** falls back to the theme default
+- **Frontmatter example:**
+  ```yaml
+  ---
+  title: "Secrets in Kubernetes: sourcing and distribution with 1password and external-secrets"
+  date: 2026-05-17
+  draft: false
+  ---
+  ```
+- **URL path:** `/blog/YYYY-MM-DD-slug/`
+
+### 2. Agent reports (`content/reports/`)
+
+Educational introductions and analyses produced entirely by AI agents on the author's behalf.
+
+- **Index:** `content/reports/_index.md`
+- **Listing template:** `layouts/reports/list.html`
+- **Single template:** `layouts/reports/single.html`
+- **Frontmatter example:**
+  ```yaml
+  ---
+  title: "Cluster audit: GitOps coverage and snowflake detection"
+  date: 2026-06-20
+  draft: false
+  ---
+  ```
+- **URL path:** `/reports/YYYY-MM-DD-slug/`
+- **Attribution:** The `_index.md` heading and every `single.html` page carry a disclaimer that the content is AI-generated.
+
+**Do not mix the two.** Blog posts go in `content/blog/`. Agent reports go in `content/reports/`.
+
+## Adding new content
+
+1. Create a Markdown file in the appropriate `content/` subdirectory.
+2. Use the frontmatter pattern shown above. `date` is required for correct listing order.
+3. If adding an agent report, keep the tone educational and introductory.
+4. Build locally to verify:
+   ```bash
+   # using the Docker dev server
+   make dev
+   # or with a local hugo binary
+   hugo server --buildDrafts
+   ```
+5. Verify the listing page and the single page render correctly.
+
+## Local development
+
+- **Dev server:** `make dev` (Docker Compose with live reload on `:1313`)
+- **Production build:** `hugo --minify` → outputs to `public/`
+- **Docker build:** `make build`
+- **Clean:** `make clean`
+
+The site uses Hugo modules; the theme is pulled from `github.com/janraasch/hugo-bearblog` at build time.
+
+## Release & deployment
+
+The repo uses **semantic-release** with Conventional Commits.
+
+- Push to `main` triggers `image-release.yaml`:
+  1. `semantic-release` analyzes commits and bumps version
+  2. Multi-arch Docker image (`linux/arm64`, `linux/amd64`) is built and pushed to `ghcr.io/andreaswachs/blog`
+  3. Trivy vulnerability scan runs
+  4. GitHub Release is created
+- On successful image release, `chart-release.yaml` triggers:
+  1. Bumps `version` and `appVersion` in `chart/Chart.yaml`
+  2. Packages and pushes Helm chart to `oci://ghcr.io/andreaswachs/charts/blog`
+
+The Helm chart is deployed via FluxCD in the homelab repo (`platform/kubernetes/releases/blog/`).
+
+### Commit conventions
+
+PR titles are linted with `commitlint`. Use Conventional Commits:
+
+```
+feat: add post about Kubernetes secrets
+fix: correct broken link in report index
+docs: update AGENTS.md
+```
+
+## Repo layout
+
+```
+├── archetypes/              # Hugo archetypes
+├── chart/                   # Helm chart (deployment, service, HTTPRoute, HPA, PDB)
+├── content/
+│   ├── _index.md            # Home page content
+│   ├── about.md             # About page
+│   ├── blog/                # Blog posts
+│   │   ├── _index.md
+│   │   └── *.md
+│   └── reports/             # Agent reports
+│       ├── _index.md
+│       └── *.md
+├── layouts/                 # Custom templates (override theme)
+│   ├── blog/
+│   │   └── list.html        # Blog listing (year/month groups + search)
+│   ├── reports/
+│   │   ├── list.html      # Reports listing (year/month groups + search)
+│   │   └── single.html    # Report single page (AI attribution banner)
+│   ├── index.html           # Home page (teasers for both sections)
+│   └── partials/
+├── .github/workflows/       # CI: PR lint, image release, chart release
+├── Dockerfile               # Multi-stage: hugo build → caddy serve
+├── Caddyfile                # Static file server on :8080
+├── compose.yaml             # Dev environment
+├── Makefile
+├── hugo.toml                # Site config (baseURL, module imports)
+├── .releaserc.js            # semantic-release config
+├── commitlint.config.js     # Conventional Commits linting
+└── package.json             # Node deps for CI tooling
+```
+
+## Agent guidelines
+
+- **Always verify Hugo builds cleanly** before submitting changes.
+- **Never commit to `main` directly.** Open a PR via the GitHub API.
+- **Preserve attribution.** If modifying `layouts/reports/single.html` or `content/reports/_index.md`, keep the AI-generated disclaimer.
+- **Match existing patterns.** When adding a new listing feature (e.g. search, grouping), apply it symmetrically to both `blog/list.html` and `reports/list.html` unless explicitly asked otherwise.
+- **Images:** If adding images, place them in `static/` and reference with relative paths. The site has no image processing pipeline.
+- **Drafts:** Use `draft: true` for work-in-progress content. Drafts are excluded from production builds but visible with `--buildDrafts`.
+
+## Content sensitivity
+
+**This site is publicly exposed.** Do not publish content that reveals internal infrastructure details, including but not limited to:
+
+- Cluster architecture, node names, or bootstrap mechanisms
+- Namespace layouts, pod names, or workload inventories
+- Internal DNS names, service endpoints, or IP ranges
+- Secret management specifics (vault names, token paths, credential flows)
+- Security tooling configurations or vulnerability findings
+
+Agent reports should be **generalized educational content** — concepts, introductions, patterns, and public-knowledge analyses. If a report is derived from internal work, sanitize it: remove identifying names, abstract the specifics, and focus on the transferable lesson.
+
+**When in doubt, ask before publishing.**
