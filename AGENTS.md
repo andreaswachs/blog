@@ -137,6 +137,25 @@ docs: update AGENTS.md
 - **Images:** If adding images, place them in `static/` and reference with relative paths. The site has no image processing pipeline.
 - **Drafts:** Use `draft: true` for work-in-progress content. Drafts are excluded from production builds but visible with `--buildDrafts`.
 
+### Mermaid diagrams
+
+Mermaid code blocks render natively in the reader's browser via the `hugo-bearblog` theme. Use them when a visual aid improves clarity.
+
+```markdown
+```mermaid
+flowchart TD
+  A[Concept] --> B[Result]
+```
+```
+
+**Rules of thumb:**
+
+- **One diagram, one idea.** If you need a second abstraction level, draw a second diagram. Resist the urge to nest subgraphs, layers, or multi-branch hierarchies inside a single diagram — they balloon into unreadable sprawl.
+- **Prefer 5–8 nodes.** If a diagram exceeds 10 nodes, split it. The sweet spot is small enough to grasp in a single glance.
+- **Label with plain language.** Short noun-phrases, not sentences. The reader should scan the diagram, not study it.
+- **Stick to `flowchart` unless there's a genuine reason** to use another variant (`sequenceDiagram`, `classDiagram`, etc.). Flowcharts cover most explanatory needs without adding cognitive overhead.
+- **Test the mental model before committing.** If you can't describe what the diagram says in one sentence, it's too complex.
+
 ## Content sensitivity
 
 **This site is publicly exposed.** Do not publish content that reveals internal infrastructure details, including but not limited to:
