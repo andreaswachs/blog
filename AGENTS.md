@@ -54,12 +54,7 @@ Educational introductions and analyses produced entirely by AI agents on the aut
 1. Create a Markdown file in the appropriate `content/` subdirectory.
 2. Use the frontmatter pattern shown above. `date` is required for correct listing order.
 3. If adding an agent report, keep the tone educational and introductory.
-4. **Audio versions (optional):** Add an `audio_file` field to the frontmatter pointing to a WAV file in `static/`. The player will appear on the article page and a 🔊 indicator will show on listing pages.
-   ```yaml
-   audio_file: "/audio/my-article.wav"
-   ```
-   Place the actual file at `static/audio/my-article.wav`. Hugo copies `static/` contents to the site root.
-5. Build locally to verify:
+4. Build locally to verify:
    ```bash
    # using the Docker dev server
    make dev
@@ -67,6 +62,34 @@ Educational introductions and analyses produced entirely by AI agents on the aut
    hugo server --buildDrafts
    ```
 5. Verify the listing page and the single page render correctly.
+
+### Audio files
+
+Articles can have an optional audio version (WAV, 24kHz) generated via the in-cluster TTS service (`taas`).
+
+**Where to place the file:**
+Put the `.wav` file in `static/audio/`. Hugo copies everything in `static/` to the site root, so `static/audio/my-article.wav` becomes `/audio/my-article.wav` in the built site.
+
+**How to associate it with an article:**
+Add the `audio_file` field to the article's YAML frontmatter. The value must be the site-root-relative path starting with `/audio/`:
+
+```yaml
+---
+title: "My article"
+date: 2026-06-21
+draft: false
+audio_file: "/audio/my-article.wav"
+---
+```
+
+**Important:** Use `audio_file` (string), never `audio`. Hugo's internal OpenGraph template expects `audio` as an array and will fail to build if it receives a string.
+
+**What happens:**
+- The article page renders a floating audio player at the top-right of the content.
+- Listing pages (home, blog index, reports index) show a 🔊 indicator next to the article title.
+
+**Naming convention:**
+Match the audio filename to the article slug for consistency, e.g. `2026-06-21-my-article.wav` for an article dated 2026-06-21 with slug `my-article`.
 
 ## Local development
 
