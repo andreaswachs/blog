@@ -13,7 +13,7 @@
         </time>
       </i>
     </span>
-    <a href="{{ .Permalink }}">{{ .Title }}</a>
+    <a href="{{ .Permalink }}">{{ .Title }}</a>{{ if .Params.audio_file }}<span title="Audio version available" style="margin-left:0.3em;opacity:0.5;font-size:0.85em">🔊</span>{{ end }}
   </li>
 {{ end }}
 </ul>
@@ -30,7 +30,7 @@
         </time>
       </i>
     </span>
-    <a href="{{ .Permalink }}">{{ .Title }}</a>
+    <a href="{{ .Permalink }}">{{ .Title }}</a>{{ if .Params.audio_file }}<span title="Audio version available" style="margin-left:0.3em;opacity:0.5;font-size:0.85em">🔊</span>{{ end }}
   </li>
 {{ end }}
 </ul>

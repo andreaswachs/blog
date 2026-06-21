@@ -23,6 +23,7 @@ Traditional long-form posts written by the author.
   title: "Secrets in Kubernetes: sourcing and distribution with 1password and external-secrets"
   date: 2026-05-17
   draft: false
+  audio_file: "/audio/my-post.wav"
   ---
   ```
 - **URL path:** `/blog/YYYY-MM-DD-slug/`
@@ -40,6 +41,7 @@ Educational introductions and analyses produced entirely by AI agents on the aut
   title: "Cluster audit: GitOps coverage and snowflake detection"
   date: 2026-06-20
   draft: false
+  audio_file: "/audio/my-report.wav"
   ---
   ```
 - **URL path:** `/reports/YYYY-MM-DD-slug/`
@@ -52,7 +54,12 @@ Educational introductions and analyses produced entirely by AI agents on the aut
 1. Create a Markdown file in the appropriate `content/` subdirectory.
 2. Use the frontmatter pattern shown above. `date` is required for correct listing order.
 3. If adding an agent report, keep the tone educational and introductory.
-4. Build locally to verify:
+4. **Audio versions (optional):** Add an `audio_file` field to the frontmatter pointing to a WAV file in `static/`. The player will appear on the article page and a 🔊 indicator will show on listing pages.
+   ```yaml
+   audio_file: "/audio/my-article.wav"
+   ```
+   Place the actual file at `static/audio/my-article.wav`. Hugo copies `static/` contents to the site root.
+5. Build locally to verify:
    ```bash
    # using the Docker dev server
    make dev
@@ -111,12 +118,15 @@ docs: update AGENTS.md
 │       └── *.md
 ├── layouts/                 # Custom templates (override theme)
 │   ├── blog/
-│   │   └── list.html        # Blog listing (year/month groups + search)
+│   │   ├── list.html        # Blog listing (year/month groups + search)
+│   │   └── single.html      # Blog single page (with optional audio)
 │   ├── reports/
-│   │   ├── list.html      # Reports listing (year/month groups + search)
-│   │   └── single.html    # Report single page (AI attribution banner)
+│   │   ├── list.html        # Reports listing (year/month groups + search)
+│   │   └── single.html      # Report single page (AI attribution banner + optional audio)
 │   ├── index.html           # Home page (teasers for both sections)
 │   └── partials/
+│       └── audio-player.html  # Reusable audio player partial
+├── static/                  # Static assets (images, audio files)
 ├── .github/workflows/       # CI: PR lint, image release, chart release
 ├── Dockerfile               # Multi-stage: hugo build → caddy serve
 ├── Caddyfile                # Static file server on :8080
@@ -134,6 +144,7 @@ docs: update AGENTS.md
 - **Never commit to `main` directly.** Open a PR via the GitHub API.
 - **Preserve attribution.** If modifying `layouts/reports/single.html` or `content/reports/_index.md`, keep the AI-generated disclaimer.
 - **Match existing patterns.** When adding a new listing feature (e.g. search, grouping), apply it symmetrically to both `blog/list.html` and `reports/list.html` unless explicitly asked otherwise.
+- **Audio support.** Both blog posts and reports support an optional `audio_file` frontmatter field for WAV playback. If adding audio support features, update `layouts/partials/audio-player.html` and both single/list templates symmetrically.
 - **Images:** If adding images, place them in `static/` and reference with relative paths. The site has no image processing pipeline.
 - **Drafts:** Use `draft: true` for work-in-progress content. Drafts are excluded from production builds but visible with `--buildDrafts`.
 
