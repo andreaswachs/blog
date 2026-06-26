@@ -2,6 +2,7 @@
 title: "Servant Leadership in AI Teams: What It Is, What It Means to Practice, and How to Begin"
 date: 2026-06-21
 draft: false
+audio_file: "/audio/2026-06-21-servant-leadership-in-ai-teams.mp3"
 ---
 
 The people building artificial intelligence systems today are not factory workers on an assembly line. They are researchers wrestling with alignment problems, engineers debugging distributed training runs, designers questioning whether a feature should ship, and product managers navigating ethical trade-offs that have no clear answer. In this environment, the old model of the all-knowing leader who issues commands from above breaks down quickly. A different model has been gaining traction for decades, and it is especially relevant now: **servant leadership**.
