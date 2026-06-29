@@ -2,6 +2,7 @@
 title: "The Beautiful Game, the Ugly Business: A History of Corruption at FIFA"
 date: 2026-06-28
 draft: false
+audio_file: "/audio/2026-06-28-fifa-corruption-history.mp3"
 ---
 
 ## Introduction
