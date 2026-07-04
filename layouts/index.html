@@ -18,25 +18,5 @@
 {{ end }}
 </ul>
 <p><a href="{{ "blog" | relURL }}">All posts →</a></p>
-
-<h2 style="margin-top:2em">Agent Reports</h2>
-<ul class="blog-posts">
-{{ range first 5 (where site.RegularPages "Section" "reports") }}
-  <li>
-    <span>
-      <i>
-        <time datetime="{{ .Date.Format "2006-01-02" }}">
-          {{ .Date.Format (default "02 Jan, 2006" .Site.Params.dateFormat) }}
-        </time>
-      </i>
-    </span>
-    <a href="{{ .Permalink }}">{{ .Title }}</a>{{ if .Params.audio_file }}<span title="Audio version available" style="margin-left:0.3em;opacity:0.5;font-size:0.85em">🔊</span>{{ end }}
-  </li>
-{{ end }}
-</ul>
-{{ if not (where site.RegularPages "Section" "reports") }}
-<p>No reports yet.</p>
-{{ end }}
-<p><a href="{{ "reports" | relURL }}">All reports →</a></p>
 </content>
 {{ end }}
