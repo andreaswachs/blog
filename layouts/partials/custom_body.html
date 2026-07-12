@@ -34,3 +34,21 @@ document.querySelectorAll('.highlight').forEach(block => {
   block.appendChild(btn);
 });
 </script>
+
+<!-- Mermaid diagram support -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'default' });
+(function renderMermaid() {
+  const codeBlocks = document.querySelectorAll('code.language-mermaid');
+  if (codeBlocks.length === 0) return;
+  codeBlocks.forEach(codeEl => {
+    const pre = codeEl.parentElement;
+    const container = document.createElement('div');
+    container.className = 'mermaid';
+    container.textContent = codeEl.textContent;
+    pre.replaceWith(container);
+  });
+  mermaid.run();
+})();
+</script>
