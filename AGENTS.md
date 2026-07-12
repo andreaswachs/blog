@@ -150,7 +150,7 @@ docs: update AGENTS.md
 
 ### Mermaid diagrams
 
-Mermaid code blocks render natively in the reader's browser via the `hugo-bearblog` theme. Use them when a visual aid improves clarity.
+Mermaid code blocks are supported via a custom `layouts/partials/custom_body.html` override that loads the mermaid.js library from CDN and renders all `language-mermaid` code blocks on page load. This works for both blog posts and agent reports since they share the same `baseof.html` template. Use them when a visual aid improves clarity.
 
 ```markdown
 ```mermaid
