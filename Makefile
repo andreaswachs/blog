@@ -4,7 +4,7 @@ dev:
 	docker compose up
 
 build:
-	docker build -t blog:local .
+	hugo --minify
 
 clean:
 	docker compose down -v

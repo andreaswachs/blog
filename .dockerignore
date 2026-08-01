@@ -1,9 +1,0 @@
-/themes/
-/public/
-/resources/
-.git/
-.hugo_build.lock
-compose.yaml
-Makefile
-chart/
-docs/

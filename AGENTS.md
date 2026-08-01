@@ -4,7 +4,7 @@ Guidance for AI agents working with the `andreaswachs/blog` repository.
 
 ## What this repo is
 
-A static site built with [Hugo](https://gohugo.io/) using the [`hugo-bearblog`](https://github.com/janraasch/hugo-bearblog) theme. It is deployed to `https://wachs.software` via a Helm chart on a Kubernetes cluster. Content is authored in Markdown with YAML frontmatter.
+A static site built with [Hugo](https://gohugo.io/) using the [`hugo-bearblog`](https://github.com/janraasch/hugo-bearblog) theme. It is served at `https://wachs.software` from a self-hosted S3 bucket (`wachs-software` on SeaweedFS, fronted by s3-proxy in the homelab). Content is authored in Markdown with YAML frontmatter.
 
 ## Content types
 
@@ -79,18 +79,15 @@ The site uses Hugo modules; the theme is pulled from `github.com/janraasch/hugo-
 
 ## Release & deployment
 
-The repo uses **semantic-release** with Conventional Commits.
+The site is served from a self-hosted S3 bucket. `deploy.yaml` runs on **every push to `main`** (idempotent):
 
-- Push to `main` triggers `image-release.yaml`:
-  1. `semantic-release` analyzes commits and bumps version
-  2. Multi-arch Docker image (`linux/arm64`, `linux/amd64`) is built and pushed to `ghcr.io/andreaswachs/blog`
-  3. Trivy vulnerability scan runs
-  4. GitHub Release is created
-- On successful image release, `chart-release.yaml` triggers:
-  1. Bumps `version` and `appVersion` in `chart/Chart.yaml`
-  2. Packages and pushes Helm chart to `oci://ghcr.io/andreaswachs/charts/blog`
+1. `semantic-release` analyzes commits, bumps the version and creates a GitHub Release (release notes only)
+2. Hugo extended (`hugo --minify`) builds the site into `public/`
+3. `aws s3 sync --delete` uploads it to `s3://wachs-software` against the self-hosted endpoint `https://s3.wachs.software`
 
-The Helm chart is deployed via FluxCD in the homelab repo (`platform/kubernetes/releases/blog/`).
+Credentials (`S3_ACCESS_KEY` / `S3_SECRET_KEY` GitHub Actions secrets) are maintained automatically by the homelab repo: the SeaweedFS operator generates a bucket-scoped access key, ESO pushes it to 1Password (item `blog-ci`), and homelab Terraform (`platform/opentofu/blog-github`) syncs it to the GitHub secrets.
+
+The old container-based path (Docker image `ghcr.io/andreaswachs/blog`, Helm chart `oci://ghcr.io/andreaswachs/charts/blog`) is retired but still published in GHCR if a rollback to the previous `wachs.software` serving is ever needed.
 
 ### Commit conventions
 
@@ -106,7 +103,6 @@ docs: update AGENTS.md
 
 ```
 ├── archetypes/              # Hugo archetypes
-├── chart/                   # Helm chart (deployment, service, HTTPRoute, HPA, PDB)
 ├── content/
 │   ├── _index.md            # Home page content
 │   ├── about.md             # About page
@@ -127,9 +123,7 @@ docs: update AGENTS.md
 │   └── partials/
 │       └── audio-player.html  # Reusable audio player partial
 ├── static/                  # Static assets (images, audio files)
-├── .github/workflows/       # CI: PR lint, image release, chart release
-├── Dockerfile               # Multi-stage: hugo build → caddy serve
-├── Caddyfile                # Static file server on :8080
+├── .github/workflows/       # CI: PR lint, deploy (hugo build + s3 sync)
 ├── compose.yaml             # Dev environment
 ├── Makefile
 ├── hugo.toml                # Site config (baseURL, module imports)
