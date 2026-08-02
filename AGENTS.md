@@ -83,7 +83,7 @@ The site is served from a self-hosted S3 bucket. `deploy.yaml` runs on **every p
 
 1. `semantic-release` analyzes commits, bumps the version and creates a GitHub Release (release notes only)
 2. Hugo extended (`hugo --minify`) builds the site into `public/`
-3. `aws s3 sync --delete` uploads it to `s3://wachs-software` against the self-hosted endpoint `https://s3.wachs.software`
+3. `aws s3 sync --delete` uploads it to `s3://wachs-software` against the self-hosted endpoint `https://blob.wachs.software`
 
 Credentials (`S3_ACCESS_KEY` / `S3_SECRET_KEY` GitHub Actions secrets) are maintained automatically by the homelab repo: the SeaweedFS operator generates a bucket-scoped access key, ESO pushes it to 1Password (item `blog-ci`), and homelab Terraform (`platform/opentofu/blog-github`) syncs it to the GitHub secrets.
 
