@@ -2,6 +2,7 @@
 title: "Artificial Sweeteners: What Recent Research Says About Their Health Effects"
 date: 2026-06-21
 draft: false
+audio_file: "/audio/2026-06-21-artificial-sweeteners-health-effects.mp3"
 ---
 
 ## Introduction
