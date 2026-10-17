@@ -6,13 +6,9 @@ Guidance for AI agents working with the `andreaswachs/blog` repository.
 
 A static site built with [Hugo](https://gohugo.io/) using the [`hugo-bearblog`](https://github.com/janraasch/hugo-bearblog) theme. It is served at `https://wachs.software` from a self-hosted S3 bucket (`wachs-software` on SeaweedFS, fronted by s3-proxy in the homelab). Content is authored in Markdown with YAML frontmatter.
 
-## Content types
+## Content type
 
-This site has two distinct content sections. They share the same underlying mechanics (Markdown + Hugo) but have different purposes, templates, and attribution requirements.
-
-### 1. Blog posts (`content/blog/`)
-
-Traditional long-form posts written by the author.
+All content lives in `content/blog/` — traditional long-form posts written by the author.
 
 - **Index:** `content/blog/_index.md`
 - **Listing template:** `layouts/blog/list.html`
@@ -28,38 +24,16 @@ Traditional long-form posts written by the author.
   ```
 - **URL path:** `/blog/YYYY-MM-DD-slug/`
 
-### 2. Agent reports (`content/reports/`)
-
-Educational introductions and analyses produced entirely by AI agents on the author's behalf.
-
-- **Index:** `content/reports/_index.md`
-- **Listing template:** `layouts/reports/list.html`
-- **Single template:** `layouts/reports/single.html`
-- **Frontmatter example:**
-  ```yaml
-  ---
-  title: "Cluster audit: GitOps coverage and snowflake detection"
-  date: 2026-06-20
-  draft: false
-  audio_file: "/audio/my-report.wav"
-  ---
-  ```
-- **URL path:** `/reports/YYYY-MM-DD-slug/`
-- **Attribution:** The `_index.md` heading and every `single.html` page carry a disclaimer that the content is AI-generated.
-
-**Do not mix the two.** Blog posts go in `content/blog/`. Agent reports go in `content/reports/`.
-
 ## Adding new content
 
-1. Create a Markdown file in the appropriate `content/` subdirectory.
+1. Create a Markdown file in `content/blog/`.
 2. Use the frontmatter pattern shown above. `date` is required for correct listing order.
-3. If adding an agent report, keep the tone educational and introductory.
-4. **Audio versions (optional):** Add an `audio_file` field to the frontmatter pointing to a WAV file in `static/`. The player will appear on the article page and a 🔊 indicator will show on listing pages.
+3. **Audio versions (optional):** Add an `audio_file` field to the frontmatter pointing to a WAV file in `static/`. The player will appear on the article page and a 🔊 indicator will show on listing pages.
    ```yaml
    audio_file: "/audio/my-article.wav"
    ```
    Place the actual file at `static/audio/my-article.wav`. Hugo copies `static/` contents to the site root.
-5. Build locally to verify:
+4. Build locally to verify:
    ```bash
    # using the Docker dev server
    make dev
@@ -95,7 +69,7 @@ PR titles are linted with `commitlint`. Use Conventional Commits:
 
 ```
 feat: add post about Kubernetes secrets
-fix: correct broken link in report index
+fix: correct broken link in blog index
 docs: update AGENTS.md
 ```
 
@@ -106,20 +80,14 @@ docs: update AGENTS.md
 ├── content/
 │   ├── _index.md            # Home page content
 │   ├── about.md             # About page
-│   ├── blog/                # Blog posts
-│   │   ├── _index.md
-│   │   └── *.md
-│   └── reports/             # Agent reports
+│   └── blog/                # Blog posts
 │       ├── _index.md
 │       └── *.md
 ├── layouts/                 # Custom templates (override theme)
 │   ├── blog/
 │   │   ├── list.html        # Blog listing (year/month groups + search)
 │   │   └── single.html      # Blog single page (with optional audio)
-│   ├── reports/
-│   │   ├── list.html        # Reports listing (year/month groups + search)
-│   │   └── single.html      # Report single page (AI attribution banner + optional audio)
-│   ├── index.html           # Home page (teasers for both sections)
+│   ├── index.html           # Home page (post teasers)
 │   └── partials/
 │       └── audio-player.html  # Reusable audio player partial
 ├── static/                  # Static assets (images, audio files)
@@ -136,15 +104,13 @@ docs: update AGENTS.md
 
 - **Always verify Hugo builds cleanly** before submitting changes.
 - **Never commit to `main` directly.** Open a PR via the GitHub API.
-- **Preserve attribution.** If modifying `layouts/reports/single.html` or `content/reports/_index.md`, keep the AI-generated disclaimer.
-- **Match existing patterns.** When adding a new listing feature (e.g. search, grouping), apply it symmetrically to both `blog/list.html` and `reports/list.html` unless explicitly asked otherwise.
-- **Audio support.** Both blog posts and reports support an optional `audio_file` frontmatter field for WAV playback. If adding audio support features, update `layouts/partials/audio-player.html` and both single/list templates symmetrically.
+- **Audio support.** Blog posts support an optional `audio_file` frontmatter field for WAV playback. If adding audio support features, update `layouts/partials/audio-player.html` and the blog single/list templates.
 - **Images:** If adding images, place them in `static/` and reference with relative paths. The site has no image processing pipeline.
 - **Drafts:** Use `draft: true` for work-in-progress content. Drafts are excluded from production builds but visible with `--buildDrafts`.
 
 ### Mermaid diagrams
 
-Mermaid code blocks are supported via a custom `layouts/partials/custom_body.html` override that loads the mermaid.js library from CDN and renders all `language-mermaid` code blocks on page load. This works for both blog posts and agent reports since they share the same `baseof.html` template. Use them when a visual aid improves clarity.
+Mermaid code blocks are supported via a custom `layouts/partials/custom_body.html` override that loads the mermaid.js library from CDN and renders all `language-mermaid` code blocks on page load. This works for blog posts since they render through the theme's `baseof.html` template. Use them when a visual aid improves clarity.
 
 ```markdown
 ```mermaid
@@ -170,7 +136,5 @@ flowchart TD
 - Internal DNS names, service endpoints, or IP ranges
 - Secret management specifics (vault names, token paths, credential flows)
 - Security tooling configurations or vulnerability findings
-
-Agent reports should be **generalized educational content** — concepts, introductions, patterns, and public-knowledge analyses. If a report is derived from internal work, sanitize it: remove identifying names, abstract the specifics, and focus on the transferable lesson.
 
 **When in doubt, ask before publishing.**
